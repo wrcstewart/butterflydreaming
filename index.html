@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ButterflyDreaming — an anonymous, moderated, poetic graph of seed text pieces. Free to enter and explore.">
+<title>ButterflyDreaming</title>
+<style>
+  :root {
+    --ground:      #1a1408;
+    --panel:       #3d2e00;
+    --text:        #f0e4c8;
+    --muted:       #a08b60;
+    --hairline:    #5a4620;
+    --signal:      #FFD700;
+    --signal-hot:  #ffe555;
+    --status-live:         #7ea070;
+    --status-intermittent: #d4a52e;
+    --status-offline:      #c05a4a;
+
+    --serif:  "Baskerville", "Iowan Old Style", Georgia, "Palatino Linotype", "Palatino", serif;
+    --sans:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html, body {
+    background: var(--ground);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  .page {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 88px 28px 96px;
+  }
+
+  /* ── Hero ─────────────────────────────────────────────────────────── */
+  .hero {
+    text-align: center;
+    margin-bottom: 72px;
+  }
+
+  .hero__title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(44px, 8.5vw, 60px);
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    margin: 0 0 22px;
+    text-wrap: balance;
+    color: var(--text);
+  }
+
+  .hero__tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(16px, 3vw, 20px);
+    color: var(--muted);
+    margin: 0 0 44px;
+    text-wrap: balance;
+  }
+
+  /* ── Primary CTA ──────────────────────────────────────────────────── */
+  .cta {
+    display: inline-block;
+    background: var(--signal);
+    color: #1a1408;
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 14px 26px;
+    border-radius: 3px;
+    border: 1px solid #a07820;
+    transition: background 120ms ease;
+  }
+
+  .cta:hover, .cta:focus-visible {
+    background: var(--signal-hot);
+  }
+
+  .cta:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+  }
+
+  .cta__arrow {
+    display: inline-block;
+    margin-left: 6px;
+    font-family: var(--serif);
+    font-style: normal;
+    font-weight: 400;
+    transform: translateY(-1px);
+  }
+
+  /* ── Asterism divider (book-typography convention) ────────────────── */
+  .asterism {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 1em;
+    padding-left: 1em; /* balance the trailing letter-spacing */
+    margin: 56px 0;
+    user-select: none;
+  }
+
+  /* ── Section — the introduction paragraphs ────────────────────────── */
+  .section p {
+    margin: 0 0 1.15em;
+  }
+
+  .section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .section strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Status panel ─────────────────────────────────────────────────── */
+  .status {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    padding: 22px 26px 24px;
+  }
+
+  .status__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .status__stamp {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Two grouped sections inside one panel: Development status (with Done /
+     To do tabbed rows) + Connection status (single line with coloured dot).
+     A hairline separates them so the panel reads as one unit but each
+     block has its own head. */
+  .status__group + .status__group {
+    border-top: 1px solid var(--hairline);
+    margin-top: 22px;
+    padding-top: 20px;
+  }
+
+  .status__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .status__label {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* The coloured dot on the Connection status head reflects server state.
+     Modifiers on .status__label swap the dot's fill + glow. Update BOTH
+     the modifier class and the body text when state changes. */
+  .status__dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-intermittent);
+  }
+  .status__label--live       .status__dot {
+    background: var(--status-live);
+    box-shadow: 0 0 6px rgba(126, 160, 112, 0.6);
+  }
+  .status__label--intermittent .status__dot {
+    background: var(--status-intermittent);
+    box-shadow: 0 0 6px rgba(212, 165, 46, 0.6);
+  }
+  .status__label--offline    .status__dot {
+    background: var(--status-offline);
+    box-shadow: 0 0 6px rgba(192, 90, 74, 0.6);
+  }
+
+  /* Tabular Done / To do rows — the key column auto-sizes to the widest
+     label so both keys' body text starts at the same x. */
+  .status__items {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 20px;
+    row-gap: 10px;
+    align-items: baseline;
+  }
+  .status__key {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .status__value {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  /* Single-line body for the Connection status group. */
+  .status__body {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* ── Secondary CTA (small, quiet) ─────────────────────────────────── */
+  .cta-block {
+    text-align: center;
+    /* 2026-07-27 — sits inside the Connection status group of the panel,
+       tucked under the status body line. Modest top space keeps the CTA
+       tied to the status without crowding the sentence above. */
+    margin-top: 22px;
+  }
+
+  .cta-feedback {
+    margin-top: 18px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .cta-feedback a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--hairline);
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .cta-feedback a:hover,
+  .cta-feedback a:focus-visible {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+
+  /* ── Links table ──────────────────────────────────────────────────── */
+  .links-heading {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 20px;
+  }
+
+  .links {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .links__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .links__row--pending {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .links__name {
+    font-family: var(--serif);
+    font-size: 17px;
+  }
+
+  .links__name a {
+    color: var(--signal);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 120ms ease;
+  }
+
+  .links__name a:hover,
+  .links__name a:focus-visible {
+    border-bottom-color: var(--signal);
+  }
+
+  .links__desc {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: right;
+    text-wrap: balance;
+  }
+
+  /* ── Footer ───────────────────────────────────────────────────────── */
+  footer {
+    margin-top: 88px;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  footer .dot {
+    margin: 0 8px;
+    opacity: 0.6;
+  }
+
+  /* ── Narrow-screen adjustments ────────────────────────────────────── */
+  @media (max-width: 480px) {
+    .page { padding: 60px 22px 72px; }
+    .asterism { margin: 44px 0; letter-spacing: 0.8em; }
+    .status { padding: 18px 20px 20px; }
+    .links__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .links__desc { text-align: left; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta { transition: none; }
+    .links__name a { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <section class="hero">
+    <h1 class="hero__title">Butterfly<wbr>Dreaming</h1>
+    <p class="hero__tagline">An experiment in social media and poetic identity.</p>
+  </section>
+
+  <div class="asterism" aria-hidden="true">◆ ◆ ◆</div>
+
+  <section class="section">
+    <p>
+      <strong>Anonymous, free, moderated.</strong>
+      No sign-in, no tracking, no charge. Contributions are moderated
+      for toxic content and to ensure privacy and anonymity.
+    </p>
+    <p>
+      <strong>Navigate through the graph</strong> — through nodes of
+      interests, moods and thoughts to seeds of text pieces. Use these
+      to exchange text with another user and possibly save into the
+      graph. Explore text-driven generative art, music and other media
+      and export out of the graph — all content is public domain and
+      free. The platform is designed for embedding in external works.
+      We suggest the graph might evolve into a sort of &ldquo;poetic
+      identity&rdquo; of which we can all be part.
+    </p>
+  </section>
+
+  <div class="asterism" aria-hidden="true">◆ ◆ ◆</div>
+
+  <section class="status" aria-label="Development and connection status">
+
+    <div class="status__group">
+      <div class="status__head">
+        <span class="status__label">Development status</span>
+        <span class="status__stamp">Updated 27/07/2026</span>
+      </div>
+      <div class="status__items">
+        <span class="status__key">Done</span>
+        <span class="status__value">
+          Core navigation; some seed text content; one example of
+          generative art; pairing.
+        </span>
+        <span class="status__key">To&nbsp;do</span>
+        <span class="status__value">
+          Extension of seed text content. Collaborative browsing, editing
+          and saving. AI (local) support. Toxicity and privacy filters.
+        </span>
+      </div>
+    </div>
+
+    <div class="status__group">
+      <div class="status__head">
+        <!-- Swap the modifier class + body text as server state changes.
+             Modifiers: status__label--live | status__label--intermittent
+             | status__label--offline. -->
+        <span class="status__label status__label--intermittent">
+          <span class="status__dot" aria-hidden="true"></span>
+          Connection status
+        </span>
+      </div>
+      <p class="status__body">
+        Short term intermittent (server under development).
+      </p>
+      <div class="cta-block">
+        <a class="cta" href="https://graph.virtualfictions.uk">
+          Enter the graph<span class="cta__arrow">&nbsp;→</span>
+        </a>
+        <p class="cta-feedback">
+          Feedback or problems to
+          <a href="mailto:wrcstewart@yahoo.co.uk">wrcstewart@yahoo.co.uk</a>
+        </p>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="asterism" aria-hidden="true">◆ ◆ ◆</div>
+
+  <section aria-label="Related sites">
+    <p class="links-heading">Further reading</p>
+    <div class="links">
+      <div class="links__row">
+        <div class="links__name">
+          <a href="https://butterflydreaming.info">ButterflyDreaming.info</a>
+        </div>
+        <div class="links__desc">Extended context &amp; background</div>
+      </div>
+      <div class="links__row">
+        <div class="links__name">
+          <a href="https://wrcstewart.github.io/bd_V_Kolam/preview.html">Kolam · graphics experiments</a>
+        </div>
+        <div class="links__desc">Standalone visual-module viewer</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    wrcstewart<span class="dot">·</span>GitHub Pages<span class="dot">·</span>butterflydreaming.org
+  </footer>
+
+</main>
+</body>
+</html>
